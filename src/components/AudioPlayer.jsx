@@ -245,37 +245,33 @@ export const AudioPlayer = () => {
       <button
         type="button"
         onClick={toggleAudio}
-        className="group relative flex items-center gap-2 bg-[#6B7556]/95 hover:bg-[#586245] active:scale-95 text-[#FBEAD6] border border-[#E5BCA9] px-3 sm:px-3.5 py-2 sm:py-2.5 min-h-[40px] rounded-full shadow-xl backdrop-blur-md transition-all duration-200 cursor-pointer"
+        className="group relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 bg-[#6B7556]/95 hover:bg-[#586245] active:scale-95 text-[#FBEAD6] border border-[#E5BCA9] rounded-full shadow-xl backdrop-blur-md transition-all duration-200 cursor-pointer animate-shaky-button"
         title={isPlaying ? "Mute Background Music" : "Play Background Music"}
         aria-label="Toggle Background Music"
         style={{ touchAction: 'manipulation' }}
       >
+        {/* Subtle spinning gold ring when music is playing */}
+        {isPlaying && (
+          <span 
+            className="absolute inset-[-3px] rounded-full border border-dashed border-[#F0C4CB]/70 animate-[spin_8s_linear_infinite] pointer-events-none" 
+          />
+        )}
+
         <div className="relative flex items-center justify-center">
           {isPlaying ? (
-            <Volume2 className="w-4 h-4 text-[#F0C4CB] animate-pulse" />
+            <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#F0C4CB] animate-pulse" />
           ) : (
-            <VolumeX className="w-4 h-4 text-[#FBEAD6]/70" />
+            <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-[#FBEAD6]/70" />
+          )}
+
+          {/* Mini active badge */}
+          {isPlaying && (
+            <span className="absolute -top-1 -right-1 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F0C4CB] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F0C4CB]"></span>
+            </span>
           )}
         </div>
-        
-        <span className="text-[10px] sm:text-xs font-cinzel font-semibold tracking-wider text-[#FBEAD6] flex items-center gap-1">
-          {isPlaying ? (
-            <>
-              <Music className="w-3 h-3 text-[#F0C4CB] animate-bounce" />
-              <span>Music Playing</span>
-            </>
-          ) : (
-            <span>Music Off</span>
-          )}
-        </span>
-
-        {isPlaying && (
-          <div className="flex items-end gap-0.5 h-3">
-            <span className="w-0.5 bg-[#FBEAD6] animate-[bounce_0.8s_infinite_100ms] h-2" />
-            <span className="w-0.5 bg-[#F0C4CB] animate-[bounce_0.8s_infinite_300ms] h-3" />
-            <span className="w-0.5 bg-[#E5BCA9] animate-[bounce_0.8s_infinite_200ms] h-1.5" />
-          </div>
-        )}
       </button>
     </div>
   );

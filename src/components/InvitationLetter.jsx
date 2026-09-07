@@ -179,7 +179,7 @@ export const InvitationLetter = ({ isVisible, onProceed }) => {
             }}
           >
             <Sparkles className="w-3.5 h-3.5 text-[#F0C4CB]" />
-            <span>Enter Full Invitation Website</span>
+            <span>CLICK</span>
             <ArrowRight className="w-3.5 h-3.5 text-[#F0C4CB]" />
           </button>
         </div>
