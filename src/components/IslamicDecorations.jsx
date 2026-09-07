@@ -1,9 +1,9 @@
 import React from 'react';
 
 // Bismillah Arabic Calligraphy Vector in 5-color palette
-export const BismillahSVG = ({ className = "w-72 h-auto" }) => (
-  <div className={`flex justify-center items-center select-none ${className}`}>
-    <div className="text-center font-amiri text-3xl sm:text-4xl md:text-5xl text-[#6B7556] tracking-wide drop-shadow-sm py-2">
+export const BismillahSVG = ({ className = "w-full h-auto" }) => (
+  <div className={`flex justify-center items-center select-none overflow-hidden ${className}`}>
+    <div className="text-center font-amiri text-xl sm:text-2xl md:text-3xl lg:text-4xl text-[#6B7556] tracking-normal drop-shadow-sm py-1 whitespace-nowrap leading-tight">
       بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
     </div>
   </div>

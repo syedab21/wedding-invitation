@@ -67,7 +67,7 @@ export const InvitationLetter = ({ isVisible, onProceed }) => {
           </div>
 
           {/* Bismillah Calligraphy */}
-          <BismillahSVG className="w-44 sm:w-60 mx-auto py-0.5" />
+          <BismillahSVG className="w-full max-w-full mx-auto py-0.5" />
 
           <p className="font-cormorant italic text-[#C87D87] text-xs sm:text-sm font-semibold">
             In the Name of Allah, the Most Gracious, the Most Merciful

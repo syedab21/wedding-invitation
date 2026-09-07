@@ -1,36 +1,28 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
+import emailjs from '@emailjs/browser';
 import { IslamicDivider } from './IslamicDecorations';
-import { Send, Sparkles, MessageSquareHeart } from 'lucide-react';
+import { Send, Sparkles, MessageSquareHeart, Loader2 } from 'lucide-react';
+import { EMAILJS_CONFIG } from '../config/emailjs';
 
 export const GuestWishes = () => {
-  const [wishes, setWishes] = useState([
-    {
-      id: 1,
-      name: "Khateeb & Syed Family Relatives",
-      message: "Barakallahu lakuma wa baraka alaikuma wa jama'a bainakuma fii khair. May Allah bless your union with eternal happiness and tranquility. Aameen!",
-      date: "September 2026"
-    },
-    {
-      id: 2,
-      name: "College Friends & Well Wishers",
-      message: "Heartiest congratulations Abdullah & Sadaf! Wishing you both a beautiful journey filled with love, laughter, and endless success.",
-      date: "September 2026"
-    }
-  ]);
-
+  const [wishes, setWishes] = useState([]);
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmitWish = (e) => {
+  const handleSubmitWish = async (e) => {
     e.preventDefault();
     if (!name.trim() || !message.trim()) return;
 
+    const guestName = name.trim();
+    const guestMessage = message.trim();
+
     const newWish = {
       id: Date.now(),
-      name: name.trim(),
-      message: message.trim(),
+      name: guestName,
+      message: guestMessage,
       date: "Just Now"
     };
 
@@ -48,7 +40,36 @@ export const GuestWishes = () => {
       });
     } catch (err) {}
 
-    setTimeout(() => setSubmitted(false), 4000);
+    // Send email notification via EmailJS if configured
+    if (
+      EMAILJS_CONFIG.SERVICE_ID && 
+      EMAILJS_CONFIG.TEMPLATE_ID && 
+      EMAILJS_CONFIG.PUBLIC_KEY &&
+      EMAILJS_CONFIG.SERVICE_ID !== 'YOUR_SERVICE_ID'
+    ) {
+      setIsSending(true);
+      try {
+        await emailjs.send(
+          EMAILJS_CONFIG.SERVICE_ID,
+          EMAILJS_CONFIG.TEMPLATE_ID,
+          {
+            from_name: guestName,
+            guest_name: guestName,
+            message: guestMessage,
+            guest_dua: guestMessage,
+            date: new Date().toLocaleString(),
+            event_name: 'Nikah Ceremony of Syed Abdullah & Sadaf Ameen',
+          },
+          EMAILJS_CONFIG.PUBLIC_KEY
+        );
+      } catch (error) {
+        console.error('EmailJS notification error:', error);
+      } finally {
+        setIsSending(false);
+      }
+    }
+
+    setTimeout(() => setSubmitted(false), 5000);
   };
 
   return (
@@ -99,10 +120,20 @@ export const GuestWishes = () => {
 
             <button
               type="submit"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-[#6B7556] hover:bg-[#586245] text-[#FBEAD6] font-cinzel font-bold text-[11px] sm:text-xs px-5 py-2.5 min-h-[40px] rounded-full shadow-xs active:scale-95 transition-all duration-200 animate-shaky-button cursor-pointer"
+              disabled={isSending}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-[#6B7556] hover:bg-[#586245] text-[#FBEAD6] font-cinzel font-bold text-[11px] sm:text-xs px-5 py-2.5 min-h-[40px] rounded-full shadow-xs active:scale-95 transition-all duration-200 animate-shaky-button cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
             >
-              <Send className="w-3.5 h-3.5" />
-              <span>Send Blessings</span>
+              {isSending ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Sending Blessings...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Send Blessings</span>
+                </>
+              )}
             </button>
 
             {submitted && (

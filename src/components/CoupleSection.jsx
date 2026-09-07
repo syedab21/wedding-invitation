@@ -42,13 +42,13 @@ export const CoupleSection = () => {
           </div>
 
           {/* Central Ornament Divider / WITH */}
-          <div className="md:col-span-1 flex flex-col items-center justify-center py-0.5">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-[#C87D87] border-2 border-[#FBEAD6] flex items-center justify-center shadow-xs z-10">
-              <span className="font-script text-xl sm:text-2xl text-[#FBEAD6]">
-                With
-              </span>
-            </div>
-          </div>
+          <div className="md:col-span-1 flex items-center justify-center">
+  <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-full bg-[#C87D87] border-2 border-[#FBEAD6] flex items-center justify-center shadow-sm z-10">
+    <span className="font-script text-[17px] sm:text-2xl leading-none text-[#FBEAD6] whitespace-nowrap">
+      With
+    </span>
+  </div>
+</div>
 
           {/* Bride Card */}
           <div className="md:col-span-5 glass-card rounded-2xl p-3.5 sm:p-6 border border-[#E5BCA9] text-center relative overflow-hidden shadow-xs">
