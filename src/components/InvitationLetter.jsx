@@ -165,12 +165,17 @@ export const InvitationLetter = ({ isVisible, onProceed }) => {
         {/* ── Call To Action Button (Touch-Friendly 48px+ height) ── */}
         <div className="relative z-10 pt-1">
           <button
-            onClick={onProceed}
+            type="button"
+            onClick={(e) => {
+              if (e) e.stopPropagation();
+              onProceed && onProceed(e);
+            }}
             className="font-cinzel inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-6 py-3 sm:py-3.5 min-h-[48px] rounded-full text-xs sm:text-sm font-bold tracking-[0.14em] text-[#FBEAD6] uppercase transition-all duration-200 active:scale-95 cursor-pointer shadow-lg hover:scale-105"
             style={{
               backgroundColor: '#6B7556',
               border: '2px solid #E5BCA9',
               boxShadow: '0 8px 24px rgba(107, 117, 86, 0.4)',
+              touchAction: 'manipulation',
             }}
           >
             <Sparkles className="w-3.5 h-3.5 text-[#F0C4CB]" />

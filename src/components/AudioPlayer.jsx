@@ -1,80 +1,236 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX, Music } from 'lucide-react';
 
+/**
+ * AudioPlayer - Continuous Romantic Oriental Wedding Melodic Generator
+ * Uses Web Audio API to create a rich, peaceful acoustic harp & oriental pad melody.
+ * Plays continuously by default on first interaction/touch.
+ * 
+ * Strict 5-Color Palette:
+ * - #F0C4CB (Soft Rose Pink)
+ * - #C87D87 (Muted Mauve / Dusty Rose)
+ * - #FBEAD6 (Warm Cream / Soft Ivory)
+ * - #6B7556 (Sage Green / Muted Olive)
+ * - #E5BCA9 (Warm Peach Beige)
+ */
 export const AudioPlayer = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
   const audioCtxRef = useRef(null);
+  const isPlayingRef = useRef(true);
+  const sequenceTimerRef = useRef(null);
+  const padNodesRef = useRef([]);
 
-  const toggleAudio = () => {
-    if (!isPlaying) {
-      startAmbientAudio();
-      setIsPlaying(true);
-    } else {
-      stopAmbientAudio();
-      setIsPlaying(false);
-    }
+  // Romantic Oriental & Wedding Pentatonic Melody Notes (Hz)
+  // D4, F4, G4, A4, Bb4, C5, D5, E5, F5
+  const MELODY_SEQUENCE = [
+    // Bar 1 - D minor warmth
+    { note: 293.66, duration: 0.6 }, // D4
+    { note: 349.23, duration: 0.4 }, // F4
+    { note: 440.00, duration: 0.8 }, // A4
+    { note: 587.33, duration: 0.6 }, // D5
+    { note: 523.25, duration: 0.5 }, // C5
+    { note: 440.00, duration: 0.7 }, // A4
+
+    // Bar 2 - G minor romantic swell
+    { note: 392.00, duration: 0.6 }, // G4
+    { note: 466.16, duration: 0.5 }, // Bb4
+    { note: 587.33, duration: 0.8 }, // D5
+    { note: 698.46, duration: 0.6 }, // F5
+    { note: 587.33, duration: 0.5 }, // D5
+    { note: 466.16, duration: 0.7 }, // Bb4
+
+    // Bar 3 - A major oriental cadence
+    { note: 440.00, duration: 0.6 }, // A4
+    { note: 554.37, duration: 0.5 }, // C#5
+    { note: 659.25, duration: 0.8 }, // E5
+    { note: 587.33, duration: 0.5 }, // D5
+    { note: 554.37, duration: 0.5 }, // C#5
+    { note: 440.00, duration: 0.8 }, // A4
+
+    // Bar 4 - Soft resolution & chime
+    { note: 349.23, duration: 0.6 }, // F4
+    { note: 392.00, duration: 0.5 }, // G4
+    { note: 440.00, duration: 0.7 }, // A4
+    { note: 293.66, duration: 1.4 }, // D4 (sustained)
+  ];
+
+  // Pluck a physical acoustic harp / santur note
+  const playPluckNote = (ctx, masterGain, freq, time, duration) => {
+    if (!ctx || ctx.state === 'closed') return;
+
+    try {
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      // Dual oscillator for rich acoustic resonance
+      osc1.type = 'triangle';
+      osc2.type = 'sine';
+      osc1.frequency.setValueAtTime(freq, time);
+      osc2.frequency.setValueAtTime(freq * 1.002, time); // Subtle warm detune
+
+      // Warm low-pass acoustic resonance
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(freq * 3.5, time);
+      filter.frequency.exponentialRampToValueAtTime(freq * 1.2, time + duration);
+
+      // Natural acoustic pluck envelope
+      gain.gain.setValueAtTime(0.0001, time);
+      gain.gain.linearRampToValueAtTime(0.045, time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration * 1.5);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+
+      osc1.start(time);
+      osc2.start(time);
+      osc1.stop(time + duration * 1.6);
+      osc2.stop(time + duration * 1.6);
+    } catch (e) {}
   };
 
-  const startAmbientAudio = () => {
+  // Start continuous ambient pads
+  const startAmbientPad = (ctx, masterGain) => {
+    stopAmbientPad();
+
+    // Warm base chord: D2 (73.4Hz), A2 (110Hz), D3 (146.8Hz), F3 (174.6Hz)
+    const padFreqs = [73.42, 110.00, 146.83, 174.61];
+
+    padNodesRef.current = padFreqs.map((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(320, ctx.currentTime);
+
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.022 / (i + 1), ctx.currentTime + 3);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+
+      osc.start();
+      return { osc, gain };
+    });
+  };
+
+  const stopAmbientPad = () => {
+    padNodesRef.current.forEach(({ osc, gain }) => {
+      try {
+        if (gain && audioCtxRef.current) {
+          gain.gain.linearRampToValueAtTime(0.0001, audioCtxRef.current.currentTime + 0.5);
+        }
+        setTimeout(() => {
+          try { osc.stop(); } catch (e) {}
+        }, 500);
+      } catch (e) {}
+    });
+    padNodesRef.current = [];
+  };
+
+  // Continuous music loop sequencer
+  const startMusicLoop = () => {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
       if (!audioCtxRef.current) {
         audioCtxRef.current = new AudioCtx();
       }
+
       if (audioCtxRef.current.state === 'suspended') {
         audioCtxRef.current.resume();
       }
 
       const ctx = audioCtxRef.current;
       const masterGain = ctx.createGain();
-      masterGain.gain.setValueAtTime(0.07, ctx.currentTime);
+      masterGain.gain.setValueAtTime(0.08, ctx.currentTime);
       masterGain.connect(ctx.destination);
-
-      const freqs = [146.83, 220.00, 293.66, 349.23, 440.00];
-      
-      const oscillators = freqs.map((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = i % 2 === 0 ? 'sine' : 'triangle';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        
-        const lfo = ctx.createOscillator();
-        const lfoGain = ctx.createGain();
-        lfo.frequency.setValueAtTime(0.2 + i * 0.1, ctx.currentTime);
-        lfoGain.gain.setValueAtTime(0.02, ctx.currentTime);
-        lfo.connect(lfoGain);
-        lfoGain.connect(gain.gain);
-        lfo.start();
-
-        gain.gain.setValueAtTime(0.03, ctx.currentTime);
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start();
-        return { osc, lfo };
-      });
-
-      audioCtxRef.current.activeNodes = oscillators;
       audioCtxRef.current.masterGain = masterGain;
+
+      startAmbientPad(ctx, masterGain);
+
+      let stepIndex = 0;
+
+      const scheduleNextStep = () => {
+        if (!isPlayingRef.current || !audioCtxRef.current) return;
+
+        const currentStep = MELODY_SEQUENCE[stepIndex % MELODY_SEQUENCE.length];
+        playPluckNote(ctx, masterGain, currentStep.note, ctx.currentTime, currentStep.duration);
+
+        stepIndex++;
+        const nextIntervalMs = currentStep.duration * 1000 * 0.95;
+        sequenceTimerRef.current = setTimeout(scheduleNextStep, nextIntervalMs);
+      };
+
+      scheduleNextStep();
     } catch (e) {
-      console.log('Audio init prevented:', e);
+      console.log('Audio init status:', e);
     }
   };
 
-  const stopAmbientAudio = () => {
-    if (audioCtxRef.current && audioCtxRef.current.activeNodes) {
-      audioCtxRef.current.activeNodes.forEach(({ osc, lfo }) => {
-        try {
-          osc.stop();
-          lfo.stop();
-        } catch (e) {}
-      });
-      audioCtxRef.current.activeNodes = null;
+  const stopMusic = () => {
+    if (sequenceTimerRef.current) {
+      clearTimeout(sequenceTimerRef.current);
+      sequenceTimerRef.current = null;
+    }
+    stopAmbientPad();
+    if (audioCtxRef.current && audioCtxRef.current.masterGain) {
+      try {
+        audioCtxRef.current.masterGain.gain.linearRampToValueAtTime(0.0001, audioCtxRef.current.currentTime + 0.3);
+      } catch (e) {}
+    }
+  };
+
+  const toggleAudio = (e) => {
+    if (e) e.stopPropagation();
+    if (isPlaying) {
+      isPlayingRef.current = false;
+      setIsPlaying(false);
+      stopMusic();
+    } else {
+      isPlayingRef.current = true;
+      setIsPlaying(true);
+      startMusicLoop();
     }
   };
 
   useEffect(() => {
+    isPlayingRef.current = isPlaying;
+
+    // Auto-start on first user interaction anywhere on the screen
+    const handleFirstInteraction = () => {
+      if (isPlayingRef.current) {
+        startMusicLoop();
+      }
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+      window.removeEventListener('scroll', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+    };
+
+    window.addEventListener('click', handleFirstInteraction, { passive: true });
+    window.addEventListener('touchstart', handleFirstInteraction, { passive: true });
+    window.addEventListener('scroll', handleFirstInteraction, { passive: true });
+    window.addEventListener('keydown', handleFirstInteraction, { passive: true });
+
+    // Attempt direct start immediately if permitted
+    startMusicLoop();
+
     return () => {
-      stopAmbientAudio();
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+      window.removeEventListener('scroll', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+      stopMusic();
     };
   }, []);
 
@@ -82,33 +238,42 @@ export const AudioPlayer = () => {
     <div 
       className="fixed z-50 pointer-events-auto"
       style={{
-        bottom: 'max(16px, env(safe-area-inset-bottom))',
-        right: 'max(16px, env(safe-area-inset-right))',
+        bottom: 'max(14px, env(safe-area-inset-bottom))',
+        right: 'max(14px, env(safe-area-inset-right))',
       }}
     >
       <button
+        type="button"
         onClick={toggleAudio}
-        className="group relative flex items-center gap-2.5 bg-[#6B7556]/95 hover:bg-[#586245] active:scale-95 text-[#FBEAD6] border border-[#E5BCA9] px-3.5 sm:px-4 py-2.5 sm:py-3 min-h-[44px] min-w-[44px] rounded-full shadow-xl backdrop-blur-md transition-all duration-200"
+        className="group relative flex items-center gap-2 bg-[#6B7556]/95 hover:bg-[#586245] active:scale-95 text-[#FBEAD6] border border-[#E5BCA9] px-3 sm:px-3.5 py-2 sm:py-2.5 min-h-[40px] rounded-full shadow-xl backdrop-blur-md transition-all duration-200 cursor-pointer"
         title={isPlaying ? "Mute Background Music" : "Play Background Music"}
         aria-label="Toggle Background Music"
+        style={{ touchAction: 'manipulation' }}
       >
         <div className="relative flex items-center justify-center">
           {isPlaying ? (
-            <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#FBEAD6] animate-pulse" />
+            <Volume2 className="w-4 h-4 text-[#F0C4CB] animate-pulse" />
           ) : (
-            <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-[#FBEAD6]/75" />
+            <VolumeX className="w-4 h-4 text-[#FBEAD6]/70" />
           )}
         </div>
         
-        <span className="text-[11px] sm:text-xs font-cinzel font-semibold tracking-wider text-[#FBEAD6] hidden sm:inline">
-          {isPlaying ? "Music On" : "Play Music"}
+        <span className="text-[10px] sm:text-xs font-cinzel font-semibold tracking-wider text-[#FBEAD6] flex items-center gap-1">
+          {isPlaying ? (
+            <>
+              <Music className="w-3 h-3 text-[#F0C4CB] animate-bounce" />
+              <span>Music Playing</span>
+            </>
+          ) : (
+            <span>Music Off</span>
+          )}
         </span>
 
         {isPlaying && (
-          <div className="flex items-end gap-1 h-3.5">
-            <span className="w-0.5 bg-[#FBEAD6] animate-[bounce_1s_infinite_100ms] h-2.5" />
-            <span className="w-0.5 bg-[#F0C4CB] animate-[bounce_1s_infinite_300ms] h-3.5" />
-            <span className="w-0.5 bg-[#FBEAD6] animate-[bounce_1s_infinite_200ms] h-2" />
+          <div className="flex items-end gap-0.5 h-3">
+            <span className="w-0.5 bg-[#FBEAD6] animate-[bounce_0.8s_infinite_100ms] h-2" />
+            <span className="w-0.5 bg-[#F0C4CB] animate-[bounce_0.8s_infinite_300ms] h-3" />
+            <span className="w-0.5 bg-[#E5BCA9] animate-[bounce_0.8s_infinite_200ms] h-1.5" />
           </div>
         )}
       </button>

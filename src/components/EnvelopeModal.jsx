@@ -51,21 +51,50 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
   const [state, setState] = useState('closed');
   const [burstKey, setBurstKey] = useState(0);
 
+  // If envelope modal is closed, don't render anything
   if (!isOpen) return null;
+
+  const playOpenChime = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 arpeggio
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+        gain.gain.setValueAtTime(0, ctx.currentTime + idx * 0.12);
+        gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + idx * 0.12 + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.12 + 0.6);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + idx * 0.12);
+        osc.stop(ctx.currentTime + idx * 0.12 + 0.65);
+      });
+    } catch (e) {}
+  };
 
   const handleEnvelopeClick = () => {
     if (state !== 'closed') return;
-    setBurstKey((k) => k + 1); // force sparkle burst to (re)play
+    setBurstKey((k) => k + 1);
     setState('opening');
 
-    // Flap flips open, wax seal cracks + sparkles, then letter modal pops up
+    if (navigator.vibrate) {
+      navigator.vibrate([25, 30, 25]);
+    }
+    playOpenChime();
+
     setTimeout(() => {
       setState('letter-opened');
     }, 1650);
   };
 
-  const handleLetterProceed = () => {
+  const handleLetterProceed = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     onOpen();
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const isFlapOpen = state !== 'closed';
