@@ -1,8 +1,10 @@
 import React from 'react';
 import { IslamicDivider, CrescentStar } from './IslamicDecorations';
-import { Calendar, Moon, UtensilsCrossed } from 'lucide-react';
+import { Calendar, Moon, UtensilsCrossed, MapPin } from 'lucide-react';
 
 export const EventDetails = () => {
+  const googleMapsUrl = "https://www.google.com/maps/place/KS+Garden+Function+Hall/@17.893414,77.5003766,17z/data=!3m1!4b1!4m6!3m5!1s0x3bcec6ee4295d8b5:0xb63770bb1e16ef2a!8m2!3d17.893414!4d77.5003766!16s%2Fg%2F11g6j77_1w?entry=ttu&g_ep=EgoyMDI2MDkwMi4wIKXMDSoASAFQAw%3D%3D";
+
   return (
     <section className="relative py-2 sm:py-6 px-1 sm:px-4">
       <div className="w-full text-center">
@@ -68,17 +70,30 @@ export const EventDetails = () => {
 
             <div className="min-w-0 flex-1 sm:w-full">
               <span className="font-cinzel text-[8px] sm:text-[10px] text-[#C87D87] uppercase tracking-widest block font-semibold">
-                Walima & Dinner
+                Dinner
               </span>
               <h3 className="font-playfair text-base sm:text-xl text-[#6B7556] font-bold leading-tight">
                 8:00 PM
               </h3>
               <p className="font-cormorant italic text-xs sm:text-sm text-[#6B7556]/90 font-medium">
-                Royal Dinner Reception
+                Dinner 
               </p>
             </div>
           </div>
 
+        </div>
+
+        {/* Exact Venue Link */}
+        <div className="mt-3 sm:mt-5 text-center">
+          <a
+            href={googleMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 bg-[#6B7556] hover:bg-[#586245] text-[#FBEAD6] font-cinzel font-bold text-[10px] sm:text-xs px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-xs active:scale-95 transition-all duration-200 animate-shaky-button border border-[#E5BCA9]"
+          >
+            <MapPin className="w-3.5 h-3.5 text-[#F0C4CB]" />
+            <span>Open KS Garden Function Hall on Google Maps</span>
+          </a>
         </div>
 
       </div>

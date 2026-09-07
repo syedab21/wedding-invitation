@@ -8,7 +8,7 @@ export const VenueSection = () => {
   const venueTitle = "K. S. Function Hall";
   const venueAddress = "Mailoor - Bidar, Karnataka";
   const fullAddress = `${venueTitle}, ${venueAddress}`;
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+  const mapsUrl = "https://www.google.com/maps/place/KS+Garden+Function+Hall/@17.893414,77.5003766,17z/data=!3m1!4b1!4m6!3m5!1s0x3bcec6ee4295d8b5:0xb63770bb1e16ef2a!8m2!3d17.893414!4d77.5003766!16s%2Fg%2F11g6j77_1w?entry=ttu&g_ep=EgoyMDI2MDkwMi4wIKXMDSoASAFQAw%3D%3D";
 
   const handleCopyAddress = () => {
     navigator.clipboard.writeText(fullAddress);
