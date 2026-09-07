@@ -170,7 +170,7 @@ export const InvitationLetter = ({ isVisible, onProceed }) => {
               if (e) e.stopPropagation();
               onProceed && onProceed(e);
             }}
-            className="font-cinzel inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-6 py-3 sm:py-3.5 min-h-[48px] rounded-full text-xs sm:text-sm font-bold tracking-[0.14em] text-[#FBEAD6] uppercase transition-all duration-200 active:scale-95 cursor-pointer shadow-lg hover:scale-105"
+            className="font-cinzel inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-6 py-3 sm:py-3.5 min-h-[48px] rounded-full text-xs sm:text-sm font-bold tracking-[0.14em] text-[#FBEAD6] uppercase transition-all duration-200 active:scale-95 cursor-pointer shadow-lg hover:scale-105 animate-shaky-button"
             style={{
               backgroundColor: '#6B7556',
               border: '2px solid #E5BCA9',

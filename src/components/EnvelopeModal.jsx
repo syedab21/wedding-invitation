@@ -185,7 +185,7 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
           >
             <button
               onClick={handleEnvelopeClick}
-              className="font-cinzel inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold tracking-[0.2em] text-[#6B7556] bg-[#F0C4CB]/55 border border-[#C87D87]/45 shadow-sm hover:scale-105 active:scale-95 transition-all duration-300 animate-bounce cursor-pointer backdrop-blur-xs"
+              className="font-cinzel inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold tracking-[0.2em] text-[#6B7556] bg-[#F0C4CB]/55 border border-[#C87D87]/45 shadow-sm hover:scale-105 active:scale-95 transition-all duration-300 animate-shaky-button cursor-pointer backdrop-blur-xs"
             >
               <Sparkles className="w-4 h-4 text-[#C87D87]" />
               TAP ENVELOPE TO OPEN

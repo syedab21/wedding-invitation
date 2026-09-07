@@ -37,7 +37,7 @@ export const Footer = () => {
         {/* Scroll To Top Button */}
         <button
           onClick={scrollToTop}
-          className="inline-flex items-center gap-1.5 text-[11px] font-cinzel text-[#6B7556] border border-[#C87D87]/40 px-4 py-2 rounded-full bg-[#F0C4CB]/30 hover:bg-[#F0C4CB]/60 active:scale-95 transition-all font-bold"
+          className="inline-flex items-center gap-1.5 text-[11px] font-cinzel text-[#6B7556] border border-[#C87D87]/40 px-4 py-2 rounded-full bg-[#F0C4CB]/30 hover:bg-[#F0C4CB]/60 active:scale-95 transition-all font-bold animate-shaky-button cursor-pointer"
         >
           <ArrowUp className="w-3.5 h-3.5 text-[#C87D87]" />
           <span>Back To Top</span>

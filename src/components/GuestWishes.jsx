@@ -99,7 +99,7 @@ export const GuestWishes = () => {
 
             <button
               type="submit"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-[#6B7556] hover:bg-[#586245] text-[#FBEAD6] font-cinzel font-bold text-[11px] sm:text-xs px-5 py-2.5 min-h-[40px] rounded-full shadow-xs active:scale-95 transition-all duration-200"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-[#6B7556] hover:bg-[#586245] text-[#FBEAD6] font-cinzel font-bold text-[11px] sm:text-xs px-5 py-2.5 min-h-[40px] rounded-full shadow-xs active:scale-95 transition-all duration-200 animate-shaky-button cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Send Blessings</span>

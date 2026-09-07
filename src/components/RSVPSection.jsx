@@ -77,8 +77,9 @@ export const RSVPSection = () => {
                   className={`p-2.5 sm:p-3.5 rounded-xl border text-center transition-all duration-200 cursor-pointer flex flex-col items-center justify-center gap-1 ${
                     rsvpStatus === 'attending'
                       ? 'bg-[#6B7556] text-[#FBEAD6] border-[#E5BCA9] shadow-md scale-[1.02]'
-                      : 'bg-[#F0C4CB]/30 text-[#6B7556] border-[#C87D87]/30 hover:bg-[#F0C4CB]/50'
+                      : 'bg-[#F0C4CB]/30 text-[#6B7556] border-[#C87D87]/30 hover:bg-[#F0C4CB]/50 animate-shaky-button'
                   }`}
+                  style={{ animationDelay: '0s' }}
                 >
                   <UserCheck className={`w-4 h-4 ${rsvpStatus === 'attending' ? 'text-[#F0C4CB]' : 'text-[#C87D87]'}`} />
                   <span className="font-cinzel text-[10px] sm:text-xs font-bold leading-tight uppercase tracking-wider">
@@ -92,8 +93,9 @@ export const RSVPSection = () => {
                   className={`p-2.5 sm:p-3.5 rounded-xl border text-center transition-all duration-200 cursor-pointer flex flex-col items-center justify-center gap-1 ${
                     rsvpStatus === 'prayers'
                       ? 'bg-[#6B7556] text-[#FBEAD6] border-[#E5BCA9] shadow-md scale-[1.02]'
-                      : 'bg-[#F0C4CB]/30 text-[#6B7556] border-[#C87D87]/30 hover:bg-[#F0C4CB]/50'
+                      : 'bg-[#F0C4CB]/30 text-[#6B7556] border-[#C87D87]/30 hover:bg-[#F0C4CB]/50 animate-shaky-button'
                   }`}
+                  style={{ animationDelay: '1.2s' }}
                 >
                   <HeartHandshake className={`w-4 h-4 ${rsvpStatus === 'prayers' ? 'text-[#F0C4CB]' : 'text-[#C87D87]'}`} />
                   <span className="font-cinzel text-[10px] sm:text-xs font-bold leading-tight uppercase tracking-wider">
@@ -139,7 +141,8 @@ export const RSVPSection = () => {
 
                   <button
                     type="submit"
-                    className="w-full inline-flex items-center justify-center gap-2 bg-[#6B7556] hover:bg-[#586245] active:scale-95 text-[#FBEAD6] font-cinzel font-bold text-xs sm:text-sm px-6 py-2.5 min-h-[42px] rounded-full shadow-md transition-all duration-200"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#6B7556] hover:bg-[#586245] active:scale-95 text-[#FBEAD6] font-cinzel font-bold text-xs sm:text-sm px-6 py-2.5 min-h-[42px] rounded-full shadow-md transition-all duration-200 animate-shaky-button"
+                    style={{ animationDelay: '0.5s' }}
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>Submit RSVP Response</span>

@@ -116,7 +116,8 @@ export const VenueSection = () => {
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-1.5 bg-[#6B7556] hover:bg-[#586245] text-[#FBEAD6] font-cinzel font-bold text-[10px] sm:text-xs px-3 py-2.5 min-h-[40px] rounded-full shadow-xs active:scale-95 transition-all duration-200"
+              className="inline-flex items-center justify-center gap-1.5 bg-[#6B7556] hover:bg-[#586245] text-[#FBEAD6] font-cinzel font-bold text-[10px] sm:text-xs px-3 py-2.5 min-h-[40px] rounded-full shadow-xs active:scale-95 transition-all duration-200 animate-shaky-button"
+              style={{ animationDelay: '0s' }}
             >
               <Navigation className="w-3.5 h-3.5 fill-current" />
               <span>Directions</span>
@@ -125,7 +126,8 @@ export const VenueSection = () => {
             {/* Copy Address Button */}
             <button
               onClick={handleCopyAddress}
-              className="inline-flex items-center justify-center gap-1.5 bg-[#F0C4CB]/40 hover:bg-[#F0C4CB]/60 text-[#6B7556] border border-[#C87D87]/50 font-cinzel text-[10px] sm:text-xs px-3 py-2.5 min-h-[40px] rounded-full shadow-xs active:scale-95 transition-all duration-200 font-semibold cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 bg-[#F0C4CB]/40 hover:bg-[#F0C4CB]/60 text-[#6B7556] border border-[#C87D87]/50 font-cinzel text-[10px] sm:text-xs px-3 py-2.5 min-h-[40px] rounded-full shadow-xs active:scale-95 transition-all duration-200 font-semibold cursor-pointer animate-shaky-button"
+              style={{ animationDelay: '0.9s' }}
             >
               {copied ? (
                 <>
@@ -143,7 +145,8 @@ export const VenueSection = () => {
             {/* Add to Calendar Button */}
             <button
               onClick={handleAddToCalendar}
-              className="inline-flex items-center justify-center gap-1.5 bg-[#F0C4CB]/40 hover:bg-[#F0C4CB]/60 text-[#6B7556] border border-[#C87D87]/50 font-cinzel text-[10px] sm:text-xs px-3 py-2.5 min-h-[40px] rounded-full shadow-xs active:scale-95 transition-all duration-200 font-semibold cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 bg-[#F0C4CB]/40 hover:bg-[#F0C4CB]/60 text-[#6B7556] border border-[#C87D87]/50 font-cinzel text-[10px] sm:text-xs px-3 py-2.5 min-h-[40px] rounded-full shadow-xs active:scale-95 transition-all duration-200 font-semibold cursor-pointer animate-shaky-button"
+              style={{ animationDelay: '1.8s' }}
             >
               <CalendarPlus className="w-3.5 h-3.5 text-[#C87D87]" />
               <span>Calendar</span>
@@ -152,7 +155,8 @@ export const VenueSection = () => {
             {/* Share via WhatsApp Button */}
             <button
               onClick={handleShareWhatsApp}
-              className="inline-flex items-center justify-center gap-1.5 bg-[#6B7556] hover:bg-[#586245] text-[#FBEAD6] font-cinzel font-bold text-[10px] sm:text-xs px-3 py-2.5 min-h-[40px] rounded-full shadow-xs active:scale-95 transition-all duration-200 cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 bg-[#6B7556] hover:bg-[#586245] text-[#FBEAD6] font-cinzel font-bold text-[10px] sm:text-xs px-3 py-2.5 min-h-[40px] rounded-full shadow-xs active:scale-95 transition-all duration-200 cursor-pointer animate-shaky-button"
+              style={{ animationDelay: '2.7s' }}
             >
               <Share2 className="w-3.5 h-3.5 text-[#F0C4CB]" />
               <span>Share Invite</span>
