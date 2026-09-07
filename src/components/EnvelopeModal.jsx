@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Heart, Star } from 'lucide-react';
 import { InvitationLetter } from './InvitationLetter';
 import { CrescentStar, LanternSVG, CornerOrnament } from './IslamicDecorations';
@@ -13,27 +13,43 @@ import { CrescentStar, LanternSVG, CornerOrnament } from './IslamicDecorations';
  * - #6B7556 (Sage Green / Muted Olive)
  * - #E5BCA9 (Warm Peach Beige)
  *
- * ── ALIGNMENT FIX ──
- * Previously the top flap lived in its own `h-1/2` box with
- * viewBox="0 0 520 170", while the front pocket lived in a separate
- * full-height box with viewBox="0 0 520 340". Two different boxes
- * scaled independently, so their fold-lines only lined up by
- * coincidence and drifted apart whenever the envelope's aspect ratio
- * changed across screen sizes (height was an independent clamp from
- * width, so preserveAspectRatio="none" stretched each SVG differently).
+ * ── ALIGNMENT FIX (kept from previous pass) ──
+ * The flap and pocket share ONE coordinate system — both are full-size
+ * boxes referencing the same apex point (260, 176) — so their fold-lines
+ * meet exactly at any screen size. The envelope box also gets a locked
+ * aspectRatio: '520/340' so the SVGs are never stretched non-uniformly.
  *
- * Fix: the flap and the pocket now share ONE coordinate system —
- * both are full-size boxes using the identical viewBox
- * "0 0 520 340", and both reference the exact same apex point
- * (260, 176). Since they're scaled by the same transform, their
- * fold-lines are now guaranteed to meet exactly, at any screen size.
- * The envelope box itself also gets a locked `aspectRatio: '520/340'`
- * so the SVGs are never stretched non-uniformly in the first place.
+ * ── BUG FIXES IN THIS PASS ──
+ * 1. Z-INDEX TIMING: previously the flap's zIndex swapped from 4 → 1 the
+ *    instant the click happened, but its rotateX transform takes 1.6s to
+ *    actually swing open. That meant the flap visually popped BEHIND the
+ *    pocket while still looking closed. Fixed by introducing `flapBehind`
+ *    state, flipped only after the flap has rotated past ~90° (roughly
+ *    the animation's midpoint), so the z-index change is imperceptible.
+ * 2. INVALID TAILWIND CLASS: `w-22 h-22` isn't a real Tailwind size (the
+ *    default scale jumps 20 → 24), so below the `sm:` breakpoint the seal
+ *    had no explicit size and collapsed to its content's intrinsic size.
+ *    Fixed by using `w-20 h-20 sm:w-24 sm:h-24` in both places the seal
+ *    is rendered (whole seal + cracked halves).
+ * 3. POST-OPEN SNAP-BACK: once `isOpening` turned false (right as the
+ *    letter appeared), the container's animation was cleared but its
+ *    static `transform` prop reset to `scale(1) translateY(0)`, which
+ *    combined with the now-active `transition` caused a visible snap
+ *    back to the original size/position at exactly the wrong moment.
+ *    Fixed by keeping the resting transform at the lifted end-state
+ *    once the envelope has left the 'closed' state, so there's nothing
+ *    to transition back to.
+ * 4. AUDIO CONTEXT CLEANUP: the AudioContext created for the open chime
+ *    was never closed. Added a cleanup call once the notes finish playing.
  */
 
 const APEX_X = 260;
 const APEX_Y = 176; // shared hinge/fold point for flap + pocket, out of a 0-340 canvas
 const APEX_Y_PCT = (APEX_Y / 340) * 100; // for positioning the wax seal precisely on it
+
+// Roughly the point in the 1.6s flap rotation where it crosses ~90°
+// (visually edge-on) — safe to swap z-index at/after this without a pop.
+const FLAP_MIDPOINT_MS = 820;
 
 // Precomputed sparkle burst directions (angle in degrees, radius in px)
 const SPARKLES = [0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => {
@@ -50,6 +66,18 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
   // state: 'closed' | 'opening' | 'letter-opened'
   const [state, setState] = useState('closed');
   const [burstKey, setBurstKey] = useState(0);
+  // FIX #1: tracks whether the flap has rotated far enough that it's safe
+  // to drop its z-index behind the pocket without a visible pop.
+  const [flapBehind, setFlapBehind] = useState(false);
+
+  const timersRef = useRef([]);
+
+  useEffect(() => {
+    return () => {
+      // Clean up any pending timers if the component unmounts mid-animation
+      timersRef.current.forEach(clearTimeout);
+    };
+  }, []);
 
   // If envelope modal is closed, don't render anything
   if (!isOpen) return null;
@@ -60,6 +88,8 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
       if (!AudioCtx) return;
       const ctx = new AudioCtx();
       const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 arpeggio
+      const lastNoteEnd = (notes.length - 1) * 0.12 + 0.65;
+
       notes.forEach((freq, idx) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -73,6 +103,13 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
         osc.start(ctx.currentTime + idx * 0.12);
         osc.stop(ctx.currentTime + idx * 0.12 + 0.65);
       });
+
+      // FIX #4: release the AudioContext once the arpeggio has finished
+      // playing, instead of leaking it for the lifetime of the page.
+      const closeTimer = setTimeout(() => {
+        ctx.close().catch(() => {});
+      }, lastNoteEnd * 1000 + 100);
+      timersRef.current.push(closeTimer);
     } catch (e) {}
   };
 
@@ -80,15 +117,24 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
     if (state !== 'closed') return;
     setBurstKey((k) => k + 1);
     setState('opening');
+    setFlapBehind(false);
 
     if (navigator.vibrate) {
       navigator.vibrate([25, 30, 25]);
     }
     playOpenChime();
 
-    setTimeout(() => {
+    // FIX #1: only drop the flap behind the pocket once it has visually
+    // rotated past the halfway point, instead of the instant the click fires.
+    const flapTimer = setTimeout(() => {
+      setFlapBehind(true);
+    }, FLAP_MIDPOINT_MS);
+    timersRef.current.push(flapTimer);
+
+    const letterTimer = setTimeout(() => {
       setState('letter-opened');
     }, 1650);
+    timersRef.current.push(letterTimer);
   };
 
   const handleLetterProceed = (e) => {
@@ -99,6 +145,7 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
 
   const isFlapOpen = state !== 'closed';
   const isOpening = state === 'opening';
+  const isClosed = state === 'closed';
 
   return (
     <>
@@ -181,7 +228,7 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
           {/* Glowing Animated Prompt */}
           <div
             className="mb-6 sm:mb-8 text-center transition-all duration-300"
-            style={{ opacity: state === 'closed' ? 1 : 0, pointerEvents: state === 'closed' ? 'auto' : 'none' }}
+            style={{ opacity: isClosed ? 1 : 0, pointerEvents: isClosed ? 'auto' : 'none' }}
           >
             <button
               onClick={handleEnvelopeClick}
@@ -193,23 +240,95 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
             </button>
           </div>
 
-          {/* ── 3D Realistic Envelope ── */}
+          {/* ── 3D Realistic Envelope ──
+              FIX #5 (flap flies off / detaches on open): previously this
+              single div hosted `perspective`, `transform-style: preserve-3d`,
+              AND its own scale/translateY lift animation all at once. Some
+              mobile browsers (notably Android WebView) don't reliably keep a
+              stable 3D rendering context when the element that establishes
+              `perspective` is ALSO being transformed itself — when that
+              breaks, the flap's `rotateX(180deg)` around its top-edge pivot
+              stops folding away in depth and instead just mirrors the flap
+              vertically upward across that pivot line, i.e. it appears to
+              detach and float above the envelope with a gap roughly equal to
+              its own height. That's exactly the symptom that was reported.
+
+              Fix: split this into two nested elements.
+                - OUTER (`perspective` only, never transformed/animated) —
+                  a stable perspective host for every 3D child.
+                - INNER "stage" (`preserve-3d` + the lift animation) — carries
+                  the scale/translateY motion and all the visual layers.
+              This is the standard, spec-safe way to set up a CSS 3D scene
+              and doesn't depend on browser-specific handling of a perspective
+              host that's also moving. */}
           <div
             onClick={handleEnvelopeClick}
-            className={`relative w-full cursor-pointer group ${state === 'closed' ? 'envelope-idle-float' : ''}`}
+            className={`relative w-full cursor-pointer group ${isClosed ? 'envelope-idle-float' : ''}`}
             style={{
-              // FIX: aspect-ratio locked to the SVGs' own design ratio (520:340)
-              // so both flap and pocket are always scaled uniformly — no more
+              // aspect-ratio locked to the SVGs' own design ratio (520:340)
+              // so both flap and pocket are always scaled uniformly — no
               // independent width/height clamps causing mismatched stretch.
               aspectRatio: '520 / 340',
               maxHeight: 340,
+              // Perspective lives here, on a wrapper with no transform of
+              // its own, so it stays a stable 3D viewing context.
               perspective: '1400px',
-              transformStyle: 'preserve-3d',
-              transition: isOpening ? 'none' : 'transform 0.4s ease',
-              animation: isOpening ? 'envelope-open-lift 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards' : 'none',
-              transform: 'scale(1) translateY(0)',
+              WebkitPerspective: '1400px',
             }}
           >
+            {/* Inner animated stage — carries the lift animation and hosts
+                the preserve-3d context for the flap's rotateX. */}
+            <div
+              className="absolute inset-0"
+              style={{
+                transformStyle: 'preserve-3d',
+                WebkitTransformStyle: 'preserve-3d',
+                // FIX #3: once the envelope has left 'closed', its resting
+                // transform is the animation's own end-state, so clearing the
+                // `animation` property later has nothing to "snap back" from.
+                transition: isOpening ? 'none' : 'transform 0.4s ease',
+                animation: isOpening ? 'envelope-open-lift 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards' : 'none',
+                transform: isClosed ? 'scale(1) translateY(0)' : 'scale(1.02) translateY(-6px)',
+              }}
+            >
+            {/* Realistic Tabletop Drop Shadow — kept OUTSIDE the clip wrapper
+                below, since it deliberately bleeds past the card's own box
+                (negative bottom offset). If it were inside the clip it would
+                be cut off and disappear entirely. */}
+            <div
+              className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[92%] h-10 rounded-[100%] pointer-events-none transition-all duration-500"
+              style={{
+                background: 'radial-gradient(ellipse at center, rgba(107,117,86,0.35) 0%, rgba(200,125,135,0.15) 50%, transparent 75%)',
+                filter: 'blur(8px)',
+                transform: isFlapOpen ? 'translateX(-50%) scale(1.1)' : 'translateX(-50%) scale(1)',
+              }}
+            />
+
+            {/* FIX #6 (flap still floats above envelope after opening):
+                rotateX(180deg) around the flap's top-edge hinge is correct
+                geometry — 180° mirrors the flap to the opposite side of that
+                hinge, i.e. ABOVE the envelope's top edge, by exactly its own
+                height. Nothing was ever clipping the envelope's visible
+                bounds, so the flap stayed fully visible up there instead of
+                disappearing out of frame the way a real envelope flap does
+                once it swings past the fold. This wrapper clips the card's
+                face (glow, panel, flap, pocket, seal) to the card's own
+                rounded-rectangle silhouette, so anything that rotates above
+                the top edge gets cut off there.
+
+                Uses `clip-path`, not `overflow: hidden` — CSS spec forces
+                `transform-style` to `flat` on any element with overflow other
+                than `visible`, which would undo the proper 3D folding this
+                needs. `clip-path` clips the painted result without breaking
+                the 3D chain, so the fold still renders correctly right up to
+                the point it's clipped away. */}
+            <div
+              className="absolute inset-0"
+              style={{
+                clipPath: 'inset(0px round 16px)',
+                WebkitClipPath: 'inset(0px round 16px)',
+              }}
+            >
             {/* Expanding glow flash at the moment the seal cracks */}
             <div
               key={`glow-${burstKey}`}
@@ -222,16 +341,6 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
                 background: 'radial-gradient(circle, rgba(251,234,214,0.9) 0%, rgba(240,196,203,0.45) 45%, transparent 72%)',
                 animation: isOpening ? 'glow-pulse 0.9s ease-out forwards' : 'none',
                 opacity: 0,
-              }}
-            />
-
-            {/* Realistic Tabletop Drop Shadow */}
-            <div
-              className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[92%] h-10 rounded-[100%] pointer-events-none transition-all duration-500"
-              style={{
-                background: 'radial-gradient(ellipse at center, rgba(107,117,86,0.35) 0%, rgba(200,125,135,0.15) 50%, transparent 75%)',
-                filter: 'blur(8px)',
-                transform: isFlapOpen ? 'translateX(-50%) scale(1.1)' : 'translateX(-50%) scale(1)',
               }}
             />
 
@@ -260,20 +369,22 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
               />
             </div>
 
-            {/* 2. Top Flap — FIX #2: the flap's box is now sized to its OWN
-                height (0 → APEX_Y, i.e. down to the fold line) instead of the
-                full envelope height (0 → 340). Previously the box spanned the
-                whole envelope, so rotating it 180° around its top hinge swung
-                the visible triangle by the ENTIRE envelope's height, making it
-                detach and float far above the envelope. Now it only swings by
-                its own (much smaller) height — a natural envelope-flap arc —
-                while still using APEX_Y as its bottom edge/viewBox height, so
-                it remains pixel-aligned with the pocket's fold-line below. */}
+            {/* 2. Top Flap — box is sized to its OWN height (0 → APEX_Y,
+                the fold line) rather than the full envelope height, so
+                rotating it 180° around its top hinge swings a natural
+                envelope-flap arc instead of detaching far above the
+                envelope, while APEX_Y still keeps it pixel-aligned with
+                the pocket's fold-line below.
+
+                FIX #1: zIndex now depends on `flapBehind`, which only
+                flips true partway through the rotation — not the instant
+                `isFlapOpen` becomes true — so the flap doesn't pop behind
+                the pocket while still looking closed. */}
             <div
               className="absolute top-0 left-0 right-0"
               style={{
                 height: `${APEX_Y_PCT}%`,
-                zIndex: isFlapOpen ? 1 : 4,
+                zIndex: flapBehind ? 1 : 4,
                 transformOrigin: '50% 0%',
                 transformStyle: 'preserve-3d',
                 transition: 'transform 1.6s cubic-bezier(0.34, 1.35, 0.32, 1)',
@@ -414,8 +525,15 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
             {/* 4. Royal Embossed Wax Seal — centered exactly on the shared
                 apex (APEX_Y_PCT), so it sits precisely where the flap meets
                 the pocket at every screen size. On open, it visually CRACKS
-                IN HALF and the two pieces fly apart (rather than a uniform
-                scale-down), with a sparkle burst radiating outward. */}
+                IN HALF and the two pieces fly apart, with a sparkle burst
+                radiating outward.
+
+                FIX #2: replaced the invalid `w-22 h-22` Tailwind class
+                (there is no `22` step in the default spacing scale, so it
+                previously produced no CSS below the `sm:` breakpoint and
+                the seal collapsed to its content's intrinsic size) with a
+                real step, `w-20 h-20 sm:w-24 sm:h-24`, in both the whole
+                seal and the two cracked-half seals below. */}
             <div
               className="absolute left-1/2 pointer-events-none"
               style={{ top: `${APEX_Y_PCT}%`, zIndex: 5 }}
@@ -439,7 +557,7 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
               {/* Whole seal — shown only while fully closed */}
               {!isFlapOpen && (
                 <div
-                  className="absolute top-1/2 left-1/2 w-22 h-22 sm:w-24 sm:h-24 flex items-center justify-center"
+                  className="absolute top-1/2 left-1/2 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center"
                   style={{ transform: 'translate(-50%, -50%)' }}
                 >
                   <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full text-[#6B7556] drop-shadow-lg">
@@ -470,7 +588,7 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
               {isOpening && ['left', 'right'].map((side) => (
                 <div
                   key={side}
-                  className="absolute top-1/2 left-1/2 w-22 h-22 sm:w-24 sm:h-24 flex items-center justify-center"
+                  className="absolute top-1/2 left-1/2 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center"
                   style={{
                     clipPath: side === 'left' ? 'inset(0 50% 0 0)' : 'inset(0 0 0 50%)',
                     animation: `seal-crack-${side} 1.1s cubic-bezier(0.4,0,0.2,1) forwards`,
@@ -499,12 +617,18 @@ export const EnvelopeModal = ({ isOpen, onOpen }) => {
               ))}
             </div>
 
+            </div>
+            {/* end clip wrapper */}
+
+            </div>
+            {/* end inner animated stage */}
           </div>
+          {/* end outer perspective host */}
 
           {/* Envelope Bottom Subtitle */}
           <p
             className="font-cormorant italic text-xs sm:text-sm text-[#6B7556]/80 mt-6 tracking-wide transition-opacity duration-300"
-            style={{ opacity: state === 'closed' ? 1 : 0 }}
+            style={{ opacity: isClosed ? 1 : 0 }}
           >
             A sacred celebration of love &amp; faith
           </p>
