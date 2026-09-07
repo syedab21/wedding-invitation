@@ -21,12 +21,15 @@ export const HeroSection = () => {
         <CornerOrnament position="top-right" className="top-2 right-2 sm:top-3 sm:right-3 w-6 sm:w-10 h-6 sm:h-10 opacity-40 pointer-events-none" />
 
         {/* Bismillah Calligraphy */}
-        <div className="mt-2 sm:mt-4 mb-1.5 sm:mb-2 w-full text-center">
-          <BismillahSVG className="w-full max-w-full mx-auto py-0.5" />
-          <p className="font-cormorant italic text-[11px] sm:text-sm text-[#C87D87] tracking-wide mt-0.5">
-            "In the name of Allah, the Most Gracious, the Most Merciful"
-          </p>
-        </div>
+       <div className="mt-4 mb-3 w-full text-center">
+  <div className="w-full flex justify-center overflow-visible">
+    <BismillahSVG className="w-[95%] h-auto scale-125" />
+  </div>
+
+  <p className="font-cormorant italic text-[16px] leading-tight text-[#C87D87] tracking-wide mt-2 px-2">
+    "In the name of Allah, the Most Gracious, the Most Merciful"
+  </p>
+</div>
 
         <IslamicDivider className="w-28 sm:w-40 mx-auto my-1.5 sm:my-3" />
 
