@@ -20,8 +20,8 @@ export const Footer = () => {
           </h3>
 
           <p className="font-cormorant text-base sm:text-lg text-[#C87D87] italic leading-snug mb-2 font-semibold">
-            Mrs & Mr Mohammad Raisuddin Khateeb <br />
-            & Syed Family
+            Mrs & Mr. Dr. Syed Abdul Jabbar Omri<br />
+             Mrs & Mr. Mohammad Raisuddin Khateeb
           </p>
 
           <p className="font-amiri text-base sm:text-lg text-[#6B7556] font-bold dir-rtl">

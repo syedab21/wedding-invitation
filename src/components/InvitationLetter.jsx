@@ -73,6 +73,10 @@ export const InvitationLetter = ({ isVisible, onProceed }) => {
             In the Name of Allah, the Most Gracious, the Most Merciful
           </p>
 
+          <p className="font-cinzel text-[9px] sm:text-[10px] text-[#6B7556] tracking-wider uppercase font-semibold my-1">
+            Under the guardianship of Syed and Khateeb Families
+          </p>
+
           <p className="font-cormorant text-[11px] sm:text-xs text-[#6B7556] max-w-sm mx-auto leading-relaxed px-2">
             Together with their families, we cordially invite you to celebrate the sacred union of
           </p>
